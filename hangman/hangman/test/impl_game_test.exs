@@ -44,4 +44,54 @@ defmodule HangmanImplGameTest do
     assert MapSet.equal?(game.used, MapSet.new(["x", "y"]))
   end
 
+  test "we recognize a letter in the word" do
+    game = Game.new_game("wombat")
+    { _game, tally } = Game.make_move(game, "m")
+    assert tally.game_state == :good_guess
+    { _game, tally } = Game.make_move(game, "t")
+    assert tally.game_state == :good_guess
+  end
+
+  test "we recognize a letter not in the word" do
+    game = Game.new_game("wombat")
+    { _game, tally } = Game.make_move(game, "x")
+    assert tally.game_state == :bad_guess
+    { _game, tally } = Game.make_move(game, "t")
+    assert tally.game_state == :good_guess
+    { _game, tally } = Game.make_move(game, "y")
+    assert tally.game_state == :bad_guess
+  end
+
+
+  # hello
+  test "can handle a sequence of move" do
+    [
+      # guess | state    turns  letters                       used
+      [ "a", :bad_guess, 6, [ "_", "_", "_", "_", "_", "_" ], [ "a" ] ],
+      [ "a", :bad_guess, 6, [ "_", "_", "_", "_", "_", "_" ], [ "a" ] ],
+      [ "e", :good_guess, 6, [ "_", "e", "_", "_", "_", "_" ], [ "a", "e" ] ],
+      [ "x", :bad_guess, 5, [ "_", "e", "_", "_", "_", "_" ], [ "a", "e", "x" ] ],
+    ]
+    |> test_sequence_of_moves()
+  end
+
+  defp test_sequence_of_moves(script) do
+    game = Game.new_game("hello")
+    Enum.reduce(script, game, &check_one_move/2)
+  end
+
+  defp check_one_move([ guess, state, turns_left, letters, used], game) do
+    { game, tally } = Game.make_move(game, guess)
+
+    assert tally.game_state == state
+    assert tally.turns_left == turns_left
+    assert tally.letters    == letters
+    assert tally.used       == used
+
+    game
+  end
+
+
+
+
 end
